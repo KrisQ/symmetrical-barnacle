@@ -276,16 +276,13 @@ func scrapeFeed(s *state) error {
 	now := time.Now()
 	
 	for _, item := range feed.Channel.Item {
-		// Parse published date
 		publishedAt, _ := parsePubDate(item.PubDate)
 		
-		// Prepare description
 		description := sql.NullString{Valid: false}
 		if item.Description != "" {
 			description = sql.NullString{String: item.Description, Valid: true}
 		}
 		
-		// Create post
 		_, err := s.db.CreatePost(ctx, database.CreatePostParams{
 			ID:          uuid.New(),
 			CreatedAt:   now,
@@ -298,13 +295,10 @@ func scrapeFeed(s *state) error {
 		})
 		
 		if err != nil {
-			// Check if it's a unique constraint violation (duplicate URL)
 			var pqErr *pq.Error
 			if errors.As(err, &pqErr) && pqErr.Code == "23505" {
-				// Duplicate URL, ignore it
 				continue
 			}
-			// Log other errors
 			log.Printf("Error saving post %s: %v", item.Title, err)
 		}
 	}
